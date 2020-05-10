@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(TARGET sx127xtools)
+set(SRC data_tx.pb.cc sx1276.cxx)
+
+# Create a static library
+add_library(${TARGET} ${SRC})
+
+target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+#target_link_libraries(${PROJ_NAME} pthread gpiod protobuf)

@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package target_cam;
+
+message target_data {
+  required string name = 1;
+  required int32 seq = 2;
+  optional bytes img = 3;
+  optional string lat = 4;
+  optional string long = 5;
+}
