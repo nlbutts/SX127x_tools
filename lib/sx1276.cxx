@@ -79,7 +79,7 @@ SX1276::SX1276(uint8_t chipRev,
 {
   std::cout << "SX1276 constructor" << std::endl;
   m_spi.mode(SPI_MODE0);
-  m_spi.frequency(20000000); // 10Mhz, if supported
+  m_spi.frequency(10000000); // 10Mhz, if supported
 
   m_gpioCS.dir(DIR_OUT);
   csOff();
@@ -268,7 +268,7 @@ void SX1276::init()
     { MODEM_FSK , FSK_RegSyncValue2      , 0x94 },
     { MODEM_FSK , FSK_RegSyncValue3      , 0xC1 },
     { MODEM_FSK , FSK_RegPacketConfig1   , 0xD8 },
-    { MODEM_FSK , FSK_RegFifoThresh      , 0x8F },
+    { MODEM_FSK , FSK_RegFifoThresh      , 0x0F },
     { MODEM_FSK , FSK_RegImageCal        , 0x02 },
     { MODEM_FSK , COM_RegDioMapping1     , 0x00 },
     { MODEM_FSK , COM_RegDioMapping2     , 0xE0 },
@@ -538,8 +538,7 @@ SX1276::RADIO_EVENT_T SX1276::send(const uint8_t *buffer, uint8_t size,
             writeReg(FSK_RegPayloadLength, size );
           }
 
-        //if ( (size > 0) && (size <= 64) )
-        if ( (size > 0) && (size <= 255) )
+        if ( (size > 0) && (size <= 64) )
           {
             m_settings.fskPacketHandler.ChunkSize = size;
           }
@@ -552,6 +551,7 @@ SX1276::RADIO_EVENT_T SX1276::send(const uint8_t *buffer, uint8_t size,
         writeFifo(buffer, m_settings.fskPacketHandler.ChunkSize);
         m_settings.fskPacketHandler.NbBytes +=
           m_settings.fskPacketHandler.ChunkSize;
+        m_txBuffer = buffer;
       }
 
       break;
@@ -1256,11 +1256,11 @@ SX1276::RADIO_EVENT_T SX1276::setTx(int timeout)
         {
           onDio0Irq(this);
         }
-        // if ((irqFlags & IRQFLAGS2_FifoLevel) == 0)
-        // {
-        //   //printf("FIFO Interrupt\n");
-        //   onDio1Irq(this);
-        // }
+        if ((irqFlags & IRQFLAGS2_FifoLevel) == 0)
+        {
+          //printf("FIFO Interrupt\n");
+          onDio1Irq(this);
+        }
         break;
       case MODEM_LORA:
         irqFlags = readReg(LOR_RegIrqFlags);
@@ -1628,6 +1628,7 @@ void SX1276::setMaxPayloadLength(RADIO_MODEM_T modem, uint8_t max)
 
 void SX1276::onDio0Irq(void *ctx)
 {
+  //printf("onDio0Irq\n");
   SX1276 *This = (SX1276 *)ctx;
 
   This->lockIntrs();
@@ -1905,6 +1906,7 @@ void SX1276::onDio0Irq(void *ctx)
 
 void SX1276::onDio1Irq(void *ctx)
 {
+  //printf("onDio1Irq\n");
   SX1276 *This = (SX1276 *)ctx;
 
   This->lockIntrs();
@@ -1982,7 +1984,7 @@ void SX1276::onDio1Irq(void *ctx)
                 This->m_settings.fskPacketHandler.NbBytes) >
                This->m_settings.fskPacketHandler.ChunkSize)
             {
-              This->writeFifo((This->m_rxBuffer +
+              This->writeFifo((This->m_txBuffer +
                                This->m_settings.fskPacketHandler.NbBytes),
                               This->m_settings.fskPacketHandler.ChunkSize);
               This->m_settings.fskPacketHandler.NbBytes +=
@@ -1991,7 +1993,7 @@ void SX1276::onDio1Irq(void *ctx)
           else
             {
               // Write the last chunk of data
-              This->writeFifo((This->m_rxBuffer +
+              This->writeFifo((This->m_txBuffer +
                                This->m_settings.fskPacketHandler.NbBytes),
                               This->m_settings.fskPacketHandler.Size -
                               This->m_settings.fskPacketHandler.NbBytes);

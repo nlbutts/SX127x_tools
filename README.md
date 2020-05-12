@@ -44,6 +44,22 @@ It will create a static library for the SX127x code and several apps.
 * fxfer - program to send/receive a file using FSK
 
 
+# File Transfer Protocol
+
+The file transfer app is pretty simple. The payload is preprended with
+the 16-bit CCITT CRC, 32-bits of the total bytes to follow, then the payload.
+
+| 32-bit payload size | 16-bit CCITT | Payload |
+
+Everything is stored in bit endian format. For example if the CRC is 0x1234
+the first byte transmitted would be 0x12 and the second byte would be 0x34.
+
+We would call this new data structure the **txpayload**. The **txpayload**
+is further split into 250 data bytes and a 16-bit sequence counter. The
+SX127x payload is then 252 bytes
+
+| Sequence number | TxPayload |
+
 # Adafruit Bonnect Pinout Reference
 
 This is just for reference, as I got tired looking for the schematic

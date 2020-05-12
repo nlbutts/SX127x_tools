@@ -2020,6 +2020,7 @@
     volatile int m_rxLen;
     uint8_t m_rxBuffer[FIFO_SIZE];
     bool m_debug;
+    const uint8_t * m_txBuffer;
 
     // for coordinating interrupt access
     pthread_mutex_t m_intrLock;
