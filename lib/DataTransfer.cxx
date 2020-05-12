@@ -11,9 +11,10 @@
 using std::vector;
 using namespace std::chrono_literals;
 
-DataTransfer::DataTransfer(SX1276 &radio, int timeout)
+DataTransfer::DataTransfer(SX1276 &radio, int timeout, bool debug)
 : _radio(&radio)
 , _timeout(timeout)
+, _debug(debug)
 {
 
 }
@@ -27,7 +28,7 @@ bool DataTransfer::send(vector<uint8_t> &payload)
 {
     uint16_t crc = crc_ccitt(0, payload.data(), payload.size());
     printf("Calculated CRC: %04x\n", crc);
-    uint32_t size = payload.size() + 6;
+    uint32_t size = payload.size() + DataOverhead;
     // Create the TxPayload
     vector<uint8_t> txpayload(size);
     // We are only transmitting 32-bits so force it into 32-bits
@@ -52,7 +53,7 @@ bool DataTransfer::send(vector<uint8_t> &payload)
         int transfer_size = txPayloadSize > PayloadSize ? PayloadSize : txPayloadSize;
         int remaining = PayloadSize - transfer_size;
         txPayloadSize -= transfer_size;
-        printf("txPayloadSize: %d -- transfer_size: %d -- remaining: %d\n", txPayloadSize, transfer_size, remaining);
+        printf("Seq: %d -- txPayloadSize: %d\n", seq, txPayloadSize);
         // Copy to tx array
         vector<uint8_t> buf(TxPayloadSize);
         auto it = buf.begin();
@@ -135,7 +136,7 @@ bool DataTransfer::receive(vector<uint8_t> &payload)
                 else
                 {
                     receivedSize += PayloadSize;
-                    printf("Received bytes: %d\n", receivedSize);
+                    //printf("Received bytes: %d\n", receivedSize);
                 }
                 expectedSeq++;
             }
@@ -151,28 +152,23 @@ bool DataTransfer::receive(vector<uint8_t> &payload)
             done = true;
         }
 
-        if (receivedSize >= expectedTotalSize)
+        if ((expectedTotalSize != 0) && (receivedSize >= expectedTotalSize))
         {
             printf("rxPayload size: %d bytes\n", rxPayload.size());
             print_vec(rxPayload.data(), rxPayload.size());
-            uint16_t calculatedCRC = crc_ccitt(0, rxPayload.data() + 6, expectedTotalSize - 6);
+            uint16_t calculatedCRC = crc_ccitt(0, rxPayload.data() + DataOverhead, expectedTotalSize - DataOverhead);
             printf("Expected CRC: %04x -- Calculated CRC: %04x\n", expectedCRC, calculatedCRC);
             if (calculatedCRC == expectedCRC)
             {
                 printf("CRC PASSED\n");
                 success = true;
+                payload.assign(rxPayload.begin()+6, rxPayload.end());
             }
             else
             {
                 printf("CRC FAILED\n");
             }
             done = true;
-            std::ofstream f("rx.bin", std::ios::binary);
-            for (int i = 6; i < (expectedTotalSize + 6); i++)
-            {
-                f << rxPayload[i];
-            }
-            f.close();
         }
     }
 
@@ -181,13 +177,16 @@ bool DataTransfer::receive(vector<uint8_t> &payload)
 
 void DataTransfer::print_vec(uint8_t * buf, int num)
 {
-    for (int i = 0; i < num; i++)
+    if (_debug)
     {
-        printf("%02x ", buf[i]);
-        if ((i % 16) == 15)
+        for (int i = 0; i < num; i++)
         {
-            printf("\n");
+            printf("%02x ", buf[i]);
+            if ((i % 16) == 15)
+            {
+                printf("\n");
+            }
         }
+        printf("\n");
     }
-    printf("\n");
 }

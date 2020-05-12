@@ -146,7 +146,7 @@ int main(int argc, char** argv)
         sensor.debug(true);
     }
 
-    DataTransfer xfer(sensor, 3000);
+    DataTransfer xfer(sensor, 3000, debug.getValue());
 
     if (!rx.getValue())
     {
@@ -190,6 +190,12 @@ int main(int argc, char** argv)
         if (xfer.receive(buf))
         {
             cout << "Received file successfully" << endl;
+            std::ofstream f(file.getValue(), std::ios::binary);
+            for (auto v : buf)
+            {
+                f << v;
+            }
+            f.close();
         }
         else
         {

@@ -22,8 +22,9 @@ public:
      *
      * @param radio reference to a SX1276 device, this should be an interface class
      * @param timeout timeout in milliseconds
+     * @param debug true to enable debug false otherwise
      */
-    DataTransfer(SX1276 &radio, int timeout);
+    DataTransfer(SX1276 &radio, int timeout, bool debug);
     virtual ~DataTransfer();
 
     /**
@@ -50,7 +51,9 @@ private:
     static constexpr int PayloadSize = 240;
     static constexpr int SeqSize = 2;
     static constexpr int TxPayloadSize = SeqSize + PayloadSize;
+    static constexpr int DataOverhead = 6;
 
     SX1276     *_radio;
     int         _timeout;
+    bool        _debug;
 };

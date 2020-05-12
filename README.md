@@ -60,6 +60,21 @@ SX127x payload is then 252 bytes
 
 | Sequence number | TxPayload |
 
+## Examples
+These settings work pretty well for the file transfer:
+Transmitter
+```
+/fxfer -f test.bin --datarate 200000 --dev 110000 -p 5 --crc
+```
+
+Receiver
+```
+./fxfer -f test.bin --datarate 200000 --bw 180000 -r --crc
+```
+
+If you add some error correcting codes, then you can remove the CRC and fix
+bit errors.
+
 # Adafruit Bonnect Pinout Reference
 
 This is just for reference, as I got tired looking for the schematic
