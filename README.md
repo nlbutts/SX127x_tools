@@ -27,7 +27,7 @@ The following pins are used to control the SX127x/RFM9x device
 
 ```
 sudo apt update
-sudo apt install -y cmake protobuf
+sudo apt install -y cmake libprotobuf-dev gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-tools gstreamer1.0-omx gstreamer1.0-plugins-base gstreamer1.0-plugins-base-apps libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev
 ```
 
 ## Build
