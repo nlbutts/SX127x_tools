@@ -23,18 +23,13 @@
  */
 
 #include <iostream>
-#include <fstream>
-#include <iostream>
 #include <signal.h>
-#include <stdio.h>
-#include <string>
-#include <chrono>
-#include <thread>
 #include <camdata.pb.h>
 #include <tclap/CmdLine.h>
 #include "sx1276.hpp"
 #include "DataTransfer.h"
 #include "ImageGrabber.h"
+#include "DataCollector.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -47,22 +42,24 @@ void sig_handler(int signo)
         exit(0);
 }
 
-vector<uint8_t> load_file(string file)
-{
-    vector<uint8_t> data;
-    FILE * f = fopen(file.c_str(), "rb");
-    if (f != nullptr)
-    {
-        int v = fgetc(f);
-        while (v != EOF)
-        {
-            data.push_back(v);
-            v = fgetc(f);
-        }
-        fclose(f);
-    }
-    return data;
-}
+// vector<uint8_t> load_file(string file)
+// {
+//     vector<uint8_t> data;
+//     FILE * f = fopen(file.c_str(), "rb");
+//     if (f != nullptr)
+//     {
+//         int v = fgetc(f);
+//         while (v != EOF)
+//         {
+//             data.push_back(v);
+//             v = fgetc(f);
+//         }
+//         fclose(f);
+//     }
+//     return data;
+// }
+
+
 
 int main(int argc, char** argv)
 {
@@ -148,17 +145,24 @@ int main(int argc, char** argv)
 
     DataTransfer xfer(sensor, 3000, debug.getValue());
     ImageGrabber grabber(3000, debug.getValue());
+    DataCollector dc(3000, debug.getValue(), sensor, payload.getValue() - 2);
+
+    ImageGrabber::cbfunc callbackfn = [&dc](std::vector<uint8_t> data)
+    {
+        dc.pushData(data);
+    };
+    grabber.registerCallback(callbackfn);
 
     if (!rx.getValue())
     {
         // Transmitter
-        grabber.init();
+        grabber.start();
 
 
-        vector<uint8_t> img;
-        grabber.grab(img);
-        xfer.send(img);
-        std::chrono::milliseconds ms{delay.getValue()};
+        // vector<uint8_t> img;
+        // grabber.grab(img);
+        // xfer.send(img);
+        // std::chrono::milliseconds ms{delay.getValue()};
         // cout << "Bytes loaded: " << data.size() << endl;
         // target_cam::target_data td;
         // cout << "Creating new protobuf" << endl;

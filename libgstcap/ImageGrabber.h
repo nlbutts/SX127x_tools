@@ -2,8 +2,12 @@
 
 #include <stdint.h>
 #include <vector>
-#include <thread>
+//#include <thread>
+#include <functional>
 #include <gst/gst.h>
+#include <gst/app/gstappsink.h>
+
+class vector;
 
 /**
  * @brief GStreamer Image Grabber
@@ -14,6 +18,8 @@
 class ImageGrabber
 {
 public:
+    typedef std::function<void(std::vector<uint8_t>)> cbfunc;
+
     /**
      * @brief Constructor
      *
@@ -24,10 +30,9 @@ public:
     virtual ~ImageGrabber();
 
     /**
-     * @brief Initializes the gstreamer pipeline.
-     * @details Initializes the gstreamer pipeline and blocks
+     * @brief Initializes the gstreamer pipeline and start capture
      */
-    void init();
+    void start();
 
     /**
      * @brief Grabs and image
@@ -39,7 +44,10 @@ public:
     bool grab(std::vector<uint8_t> &payload);
 
     bool running()              {return _running;}
-    GstElement* get_sink()      {return _sink;}
+
+    void registerCallback(cbfunc &cb) {_cb=cb;}
+
+    void get_data();
 
 private:
 
@@ -47,5 +55,6 @@ private:
     int         _timeout;
     int         _debug;
     bool        _running;
-    GstElement *_sink;
+    GstAppSink *_sink;
+    cbfunc      _cb;
 };

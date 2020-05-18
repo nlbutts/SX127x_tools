@@ -1,70 +1,9 @@
 #include <stdio.h>
-#include <gst/app/gstappsink.h>
 
 #include "ImageGrabber.h"
+#include <thread>
 
 using std::vector;
-
-  // "eos" :  void user_function (GstElement* object,
-  //                              gpointer user_data);
-  // "new-preroll" :  GstFlowReturn user_function (GstElement* object,
-  //                                               gpointer user_data);
-  // "new-sample" :  GstFlowReturn user_function (GstElement* object,
-  //                                              gpointer user_data);
-
-GstFlowReturn new_preroll (GstAppSink * appsink)
-{
-    printf("new_preroll\n");
-    return GST_FLOW_OK;
-}
-
-GstFlowReturn new_sample (GstAppSink * appsink)
-{
-    printf("new_sample\n");
-    return GST_FLOW_OK;
-}
-
-void get_data(ImageGrabber *ig)
-{
-    GstAppSink * sink = (GstAppSink*)ig->get_sink();
-    while (ig->running())
-    {
-        GstSample * sample = gst_app_sink_pull_sample(sink);
-        printf("Have sample\n");
-        GstBuffer *buffer;
-        GstCaps *caps;
-        GstStructure *s;
-        gint width, height;
-        gboolean res;
-
-        /* get the snapshot buffer format now. We set the caps on the appsink so
-         * that it can only be an rgb buffer. The only thing we have not specified
-         * on the caps is the height, which is dependant on the pixel-aspect-ratio
-         * of the source material */
-        // caps = gst_sample_get_caps (sample);
-        // if (!caps) {
-        //   g_print ("could not get snapshot format\n");
-        //   exit (-1);
-        // }
-        // s = gst_caps_get_structure (caps, 0);
-
-        buffer = gst_sample_get_buffer(sample);
-        gsize bufSize = gst_buffer_get_size(buffer);
-        printf("Got buffer of size %u\n", (uint32_t)bufSize);
-        // uint8_t * data = new uint8_t[bufSize];
-        // if (data)
-        // {
-        //     if (gst_buffer_extract(buffer, 0, data, bufSize) == bufSize)
-        //     {
-        //         // Copied the correct amount, write it to the file
-        //         ofs.write((const char *)data, bufSize);
-        //     }
-        //     delete [] data;
-        // }
-
-        gst_sample_unref(sample);
-    }
-}
 
 ImageGrabber::ImageGrabber(int timeout, bool debug)
 : _timeout(timeout)
@@ -79,7 +18,7 @@ ImageGrabber::~ImageGrabber()
 
 }
 
-void ImageGrabber::init()
+void ImageGrabber::start()
 {
     GstElement *pipeline;
     GstBus *bus;
@@ -97,11 +36,12 @@ void ImageGrabber::init()
 
     printf("pipeline: %08x\n", pipeline);
 
-    _sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+    _sink = (GstAppSink*)gst_bin_get_by_name (GST_BIN (pipeline), "sink");
     printf("Got sink: %08X\n", _sink);
 
     _running = true;
-    std::thread t1(get_data, this);
+    //std::thread t1(threadfn, this);
+    std::thread t1(&ImageGrabber::get_data, this);
 
     /* Start playing */
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -131,3 +71,46 @@ bool ImageGrabber::grab(vector<uint8_t> &payload)
     return success;
 }
 
+void ImageGrabber::get_data()
+{
+    while (_running)
+    {
+        GstSample * sample = gst_app_sink_pull_sample(_sink);
+        //printf("Have sample\n");
+        GstBuffer *buffer;
+        GstCaps *caps;
+        GstStructure *s;
+        gint width, height;
+        gboolean res;
+
+        /* get the snapshot buffer format now. We set the caps on the appsink so
+         * that it can only be an rgb buffer. The only thing we have not specified
+         * on the caps is the height, which is dependant on the pixel-aspect-ratio
+         * of the source material */
+        // caps = gst_sample_get_caps (sample);
+        // if (!caps) {
+        //   g_print ("could not get snapshot format\n");
+        //   exit (-1);
+        // }
+        // s = gst_caps_get_structure (caps, 0);
+
+        buffer = gst_sample_get_buffer(sample);
+        gsize bufSize = gst_buffer_get_size(buffer);
+        //printf("Got buffer of size %u\n", (uint32_t)bufSize);
+        std::vector<uint8_t> data(bufSize);
+        if (gst_buffer_extract(buffer, 0, data.data(), bufSize));
+        _cb(data);
+        // uint8_t * data = new uint8_t[bufSize];
+        // if (data)
+        // {
+        //     if (gst_buffer_extract(buffer, 0, data, bufSize) == bufSize)
+        //     {
+        //         // Copied the correct amount, write it to the file
+        //         ofs.write((const char *)data, bufSize);
+        //     }
+        //     delete [] data;
+        // }
+
+        gst_sample_unref(sample);
+    }
+}

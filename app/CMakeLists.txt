@@ -17,6 +17,6 @@ target_link_libraries(${FXFER} pthread gpiod sx127x)
 target_include_directories(${FXFER} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/tclap-1.2.2/include)
 
 set(CAM cam)
-add_executable(${CAM} cam.cxx camdata.pb.cc)
+add_executable(${CAM} cam.cxx camdata.pb.cc DataCollector.cxx)
 target_link_libraries(${CAM} pthread gpiod protobuf sx127x gstcap)
 target_include_directories(${CAM} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/tclap-1.2.2/include ${CMAKE_CURRENT_LIST_DIR})
