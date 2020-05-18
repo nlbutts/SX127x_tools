@@ -30,7 +30,7 @@
 #include <string>
 #include <chrono>
 #include <thread>
-#include <data_tx.pb.h>
+#include <camdata.pb.h>
 #include <tclap/CmdLine.h>
 #include "sx1276.hpp"
 #include "DataTransfer.h"
@@ -148,11 +148,13 @@ int main(int argc, char** argv)
 
     DataTransfer xfer(sensor, 3000, debug.getValue());
     ImageGrabber grabber(3000, debug.getValue());
-    grabber.init();
 
     if (!rx.getValue())
     {
         // Transmitter
+        grabber.init();
+
+
         vector<uint8_t> img;
         grabber.grab(img);
         xfer.send(img);

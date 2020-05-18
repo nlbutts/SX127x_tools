@@ -23,7 +23,11 @@ public:
     ImageGrabber(int timeout, bool debug);
     virtual ~ImageGrabber();
 
-    bool init();
+    /**
+     * @brief Initializes the gstreamer pipeline.
+     * @details Initializes the gstreamer pipeline and blocks
+     */
+    void init();
 
     /**
      * @brief Grabs and image

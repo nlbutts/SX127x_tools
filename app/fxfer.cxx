@@ -30,7 +30,6 @@
 #include <string>
 #include <chrono>
 #include <thread>
-#include <data_tx.pb.h>
 #include <tclap/CmdLine.h>
 #include "sx1276.hpp"
 #include "DataTransfer.h"
@@ -65,8 +64,6 @@ vector<uint8_t> load_file(string file)
 
 int main(int argc, char** argv)
 {
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-
     try {
     TCLAP::CmdLine cmd("SX1276 Tester", ' ', "0.9");
     TCLAP::ValueArg<int> tx_pwr("p","txpower","Transmit power", false, 14, "dBm", cmd);
@@ -151,37 +148,7 @@ int main(int argc, char** argv)
     if (!rx.getValue())
     {
         vector<uint8_t> data = load_file(file.getValue());
-        // vector<uint8_t> data(payload.getValue());
-        // for (int i = 0; i < payload.getValue(); i++)
-        // {
-        //     data[i] = i;
-        // }
         xfer.send(data);
-        // cout << "Bytes loaded: " << data.size() << endl;
-        // target_cam::target_data td;
-        // cout << "Creating new protobuf" << endl;
-        // td.set_name("Hello Target Cam");
-        // td.set_img((void*)data.data(), data.size());
-        // td.set_lat(string("42.1234"));
-        // td.set_long_(string("-96.987"));
-        // td.set_seq(2);
-        // //fstream output("test.pb", ios::out | ios::trunc | ios::binary);
-        // string output;
-        // cout << "Serializing" << endl;
-        // td.SerializeToString(&output);
-        // int out_size = output.size();
-        // const uint8_t * ptr = (const uint8_t*)output.data();
-        // int payloadSize = payload.getValue();
-        // int seq = 0;
-        // while (out_size > 0)
-        // {
-        //     cout << "Bytes left " << out_size << endl;
-        //     int transfer_size = out_size > payloadSize ? 255 : out_size;
-        //     sensor.send(ptr, transfer_size, 3000);
-        //     out_size -= transfer_size;
-        //     // snprintf(buffer, buflen, "Ping %d", count++);
-        // }
-        // sensor.setSleep();
     }
     else
     {
@@ -201,25 +168,6 @@ int main(int argc, char** argv)
         {
             cout << "Failed to receive file" << endl;
         }
-        // cout << "Attempting to receive..." << endl;
-        // int rv;
-        // if ((rv = sensor.setRx(3000)))
-        // {
-        //     cout << "setRx returned " << rv << endl;
-        // }
-        // else
-        // {
-        //   uint8_t * rxData = sensor.getRxBuffer();
-        //   uint32_t seqNum = (rxData[0] << 24) |
-        //                     (rxData[1] << 16) |
-        //                     (rxData[2] <<  8) |
-        //                     (rxData[3]      );
-
-        //   printf("RSSI: %3d  -- Received bytes: %d -- Seq Num: %d\n", sensor.getRxRSSI(), sensor.getRxLen(), seqNum);
-        // }
-
-        // // go back to upm_delay when done
-        // std::this_thread::sleep_for(ms);
     }
     //! [Interesting]
 

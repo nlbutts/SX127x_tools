@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(sx1276_tools)
 
-add_subdirectory(lib)
+add_subdirectory(libgstcap)
+add_subdirectory(libsx127x)
 add_subdirectory(app)
 
 # set the project name

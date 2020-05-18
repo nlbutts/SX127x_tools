@@ -62,15 +62,6 @@ void get_data(ImageGrabber *ig)
         //     delete [] data;
         // }
 
-        // /* we need to get the final caps on the buffer to get the size */
-        // res = gst_structure_get_int (s, "width", &width);
-        // res |= gst_structure_get_int (s, "height", &height);
-        // if (!res) {
-        //   g_print ("could not get snapshot dimension\n");
-        //   exit (-1);
-        // }
-
-        // printf("W*H: %dx%d\n", (int)width, (int)height);
         gst_sample_unref(sample);
     }
 }
@@ -88,7 +79,7 @@ ImageGrabber::~ImageGrabber()
 
 }
 
-bool ImageGrabber::init()
+void ImageGrabber::init()
 {
     GstElement *pipeline;
     GstBus *bus;
@@ -132,7 +123,6 @@ bool ImageGrabber::init()
     gst_object_unref (bus);
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_object_unref (pipeline);
-    return true;
 }
 
 bool ImageGrabber::grab(vector<uint8_t> &payload)
